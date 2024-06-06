@@ -1,0 +1,153 @@
+import tkinter as tk
+from tkinter import messagebox
+
+def set_matrices():
+    global matrix1_entries, matrix2_entries
+
+    # Destroy previous matrix input fields
+    for row in matrix1_entries:
+        for widget in row:
+            widget.destroy()
+    for row in matrix2_entries:
+        for widget in row:
+            widget.destroy()
+
+    # Reset entry lists
+    matrix1_entries = []
+    matrix2_entries = []
+
+    # Get matrix sizes from input fields
+    try:
+        rows1 = int(matrix1_rows.get())
+        cols1 = int(matrix1_cols.get())
+        rows2 = int(matrix2_rows.get())
+        cols2 = int(matrix2_cols.get())
+    except ValueError:
+        messagebox.showerror("Input Error", "Please enter valid integers for matrix sizes")
+        return
+
+    # Create input fields for Matrix 1
+    for i in range(rows1):
+        row_entries1 = []
+        for j in range(cols1):
+            e1 = tk.Entry(root, width=5)
+            e1.grid(row=i+7, column=j)
+            row_entries1.append(e1)
+        matrix1_entries.append(row_entries1)
+
+    # Create input fields for Matrix 2
+    for i in range(rows2):
+        row_entries2 = []
+        for j in range(cols2):
+            e2 = tk.Entry(root, width=5)
+            e2.grid(row=i+7, column=j+cols1+1)
+            row_entries2.append(e2)
+        matrix2_entries.append(row_entries2)
+
+def get_matrix(entries):
+    matrix = []
+    try:
+        for row_entries in entries:
+            row = [int(entry.get()) for entry in row_entries]
+            matrix.append(row)
+    except ValueError:
+        messagebox.showerror("Input Error", "Please enter valid integers")
+        return None
+    return matrix
+
+def calculate():
+    matrix1 = get_matrix(matrix1_entries)
+    matrix2 = get_matrix(matrix2_entries)
+
+    if matrix1 is None or matrix2 is None:
+        return
+
+    operation = operation_var.get()
+    result = None
+
+    try:
+        if operation == "add":
+            result = add_matrices(matrix1, matrix2)
+        elif operation == "subtract":
+            result = subtract_matrices(matrix1, matrix2)
+        elif operation == "multiply":
+            result = multiply_matrices(matrix1, matrix2)
+    except ValueError as e:
+        messagebox.showerror("Error", str(e))
+        return
+
+    if result:
+        display_result(result)
+
+def add_matrices(m1, m2):
+    if len(m1) != len(m2) or len(m1[0]) != len(m2[0]):
+        raise ValueError("Matrix dimensions do not match for addition")
+    return [[m1[i][j] + m2[i][j] for j in range(len(m1[0]))] for i in range(len(m1))]
+
+def subtract_matrices(m1, m2):
+    if len(m1) != len(m2) or len(m1[0]) != len(m2[0]):
+        raise ValueError("Matrix dimensions do not match for subtraction")
+    return [[m1[i][j] - m2[i][j] for j in range(len(m1[0]))] for i in range(len(m1))]
+
+def multiply_matrices(m1, m2):
+    if len(m1[0]) != len(m2):
+        raise ValueError("Matrix dimensions do not match for multiplication")
+    result = [[0 for _ in range(len(m2[0]))] for _ in range(len(m1))]
+    for i in range(len(m1)):
+        for j in range(len(m2[0])):
+            for k in range(len(m2)):
+                result[i][j] += m1[i][k] * m2[k][j]
+    return result
+
+def display_result(result):
+    result_str = "\n".join(["\t".join(map(str, row)) for row in result])
+    result_label.config(text=result_str)
+
+# Initialize the main Tkinter window
+root = tk.Tk()
+root.title("Matrix Calculator")
+
+# Global variables to hold matrix entries
+matrix1_entries = []
+matrix2_entries = []
+
+# Create input fields and labels for matrix sizes
+tk.Label(root, text="Matrix 1 Size:").grid(row=0, column=0, columnspan=2)
+tk.Label(root, text="Rows").grid(row=1, column=0)
+tk.Label(root, text="Columns").grid(row=1, column=1)
+
+matrix1_rows = tk.Entry(root, width=5)
+matrix1_rows.grid(row=2, column=0)
+matrix1_cols = tk.Entry(root, width=5)
+matrix1_cols.grid(row=2, column=1)
+
+tk.Label(root, text="Matrix 2 Size:").grid(row=0, column=2, columnspan=2)
+tk.Label(root, text="Rows").grid(row=1, column=2)
+tk.Label(root, text="Columns").grid(row=1, column=3)
+
+matrix2_rows = tk.Entry(root, width=5)
+matrix2_rows.grid(row=2, column=2)
+matrix2_cols = tk.Entry(root, width=5)
+matrix2_cols.grid(row=2, column=3)
+
+# Button to set matrix input fields
+tk.Button(root, text="Set Matrices", command=set_matrices).grid(row=3, column=0, columnspan=4)
+
+# Radio buttons for selecting the operation
+tk.Label(root, text="Operation:").grid(row=4, column=0)
+operation_var = tk.StringVar()
+operation_var.set("add")
+
+tk.Radiobutton(root, text="Add", variable=operation_var, value="add").grid(row=4, column=1)
+tk.Radiobutton(root, text="Subtract", variable=operation_var, value="subtract").grid(row=4, column=2)
+tk.Radiobutton(root, text="Multiply", variable=operation_var, value="multiply").grid(row=4, column=3)
+
+# Button to perform the calculation
+tk.Button(root, text="Calculate", command=calculate).grid(row=5, column=0, columnspan=4)
+
+# Label to display the result
+result_label = tk.Label(root, text="")
+result_label.grid(row=6, column=0, columnspan=4)
+
+# Start the Tkinter main loop
+root.mainloop()
